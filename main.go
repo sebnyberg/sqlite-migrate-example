@@ -16,7 +16,7 @@ import (
 func main() {
 	db, err := sql.Open("sqlite", "file:example.db")
 	check(err, "failed to open sqlite connection")
-	check(ensureSchema(db), "failed to migrate database")
+	check(ensureSchema(db), "migration failed")
 }
 
 //go:embed migrations
@@ -31,16 +31,16 @@ func ensureSchema(db *sql.DB) error {
 	}
 	targetInstance, err := sqlite.WithInstance(db, new(sqlite.Config))
 	if err != nil {
-		return fmt.Errorf("invalid target sqlite instance err, %w", err)
+		return fmt.Errorf("invalid target sqlite instance, %w", err)
 	}
-	m, err := migrate.NewWithInstance("httpfs", sourceInstance,
-		"sqlite", targetInstance)
+	m, err := migrate.NewWithInstance(
+		"httpfs", sourceInstance, "sqlite", targetInstance)
 	if err != nil {
 		return fmt.Errorf("failed to initialize migrate instance, %w", err)
 	}
 	err = m.Migrate(schemaVersion)
 	if err != nil && err != migrate.ErrNoChange {
-		return fmt.Errorf("migration failed, %w", err)
+		return err
 	}
 	return sourceInstance.Close()
 }
