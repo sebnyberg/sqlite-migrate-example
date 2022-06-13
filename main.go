@@ -22,6 +22,8 @@ func main() {
 //go:embed migrations
 var migrations embed.FS
 
+// Note: in an actual prod environment, the schema version would be configurable
+// e.g. via flags and/or environment variables.
 const schemaVersion = 1
 
 func ensureSchema(db *sql.DB) error {
