@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
+	"log"
 	"net/http"
-	"os"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite"
@@ -15,15 +15,17 @@ import (
 
 func main() {
 	db, err := sql.Open("sqlite", "file:example.db")
-	check(err, "failed to open sqlite connection")
-	check(ensureSchema(db), "migration failed")
+	if err != nil {
+		log.Fatalln("failed to open sqlite connection")
+	}
+	if err := ensureSchema(db); err != nil {
+		log.Fatalln("migration failed")
+	}
 }
 
 //go:embed migrations
 var migrations embed.FS
 
-// Note: in an actual prod environment, the schema version would be configurable
-// e.g. via flags and/or environment variables.
 const schemaVersion = 1
 
 func ensureSchema(db *sql.DB) error {
@@ -45,11 +47,4 @@ func ensureSchema(db *sql.DB) error {
 		return err
 	}
 	return sourceInstance.Close()
-}
-
-func check(err error, msg string) {
-	if err != nil {
-		fmt.Printf("%v, err: %v\n", msg, err)
-		os.Exit(1)
-	}
 }
